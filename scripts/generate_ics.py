@@ -16,11 +16,15 @@
 import csv
 import requests
 from datetime import datetime, date, timedelta
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import pytz
 from icalendar import Calendar, Event
 import lunardate
+try:
+    import sxtwl  # 精确计算二十四节气
+except Exception:
+    sxtwl = None
 
 
 TZ_SH = pytz.timezone("Asia/Shanghai")
@@ -142,10 +146,17 @@ def load_lunar_holidays(csv_path: str) -> List[Dict]:
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # 兼容包含非数字（用于占位的节气等）字段，无法转为数字则置为 None
+            def _to_int(v: Optional[str]) -> Optional[int]:
+                try:
+                    return int(str(v).strip())
+                except Exception:
+                    return None
+
             items.append({
                 "name": row.get("name", "").strip(),
-                "lunar_month": int(row["lunar_month"]),
-                "lunar_day": int(row["lunar_day"]),
+                "lunar_month": _to_int(row.get("lunar_month")),
+                "lunar_day": _to_int(row.get("lunar_day")),
                 "description": row.get("description", "").strip(),
             })
     return items
@@ -187,6 +198,9 @@ def generate_lunar_holidays(cal: Calendar, years: List[int], items: List[Dict]) 
     seen: set[Tuple[date, str]] = set()
     for y in years:
         for it in items:
+            # 若该行用于占位（如节气），字段为 None，则跳过本函数，由节气生成逻辑处理
+            if it["lunar_month"] is None or it["lunar_day"] is None:
+                continue
             sols = lunar_to_solar_for_gregorian_year(y, it["lunar_month"], it["lunar_day"])
             for dt in sols:
                 key = (dt, it["name"]) 
@@ -195,6 +209,49 @@ def generate_lunar_holidays(cal: Calendar, years: List[int], items: List[Dict]) 
                 seen.add(key)
                 desc = it["description"] or "中国传统节日"
                 _add_all_day_event(cal, dt, it["name"], desc, "传统节日")
+
+
+def _solar_term_names() -> List[str]:
+    """返回标准的二十四节气名列表（按序）。
+
+    中文函数级注释：
+    - 顺序为：小寒、大寒、立春、雨水、惊蛰、春分、清明、谷雨、立夏、小满、芒种、夏至、
+      小暑、大暑、立秋、处暑、白露、秋分、寒露、霜降、立冬、小雪、大雪、冬至。
+    - 该顺序与常见历法库索引一致，便于映射。
+    """
+    return [
+        "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨",
+        "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑",
+        "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至",
+    ]
+
+
+def generate_solar_terms(cal: Calendar, years: List[int]) -> None:
+    """生成指定年份集合的二十四节气事件（精确到当地历法日期）。
+
+    中文函数级注释：
+    - 使用 sxtwl 库计算年度节气发生时间（儒略日转为公历），并取上海时区的日历日期。
+    - 若环境未安装 sxtwl（如临时失败），为了不中断生成，跳过节气部分。
+    - 分类标记为“节气”，描述统一为“二十四节气”。
+    """
+    if sxtwl is None:
+        return
+
+    names = _solar_term_names()
+    for y in years:
+        # 逐日扫描该年所有日期，发现节气即记录
+        day = sxtwl.fromSolar(y, 1, 1)
+        while day.getSolarYear() == y:
+            if day.hasJieQi():
+                idx = day.getJieQi()
+                # 获取节气的儒略日并换算为具体时间
+                jd = day.getJieQiJD()
+                t = sxtwl.JD2DD(jd)
+                # 以本地日期为全天事件日期
+                dt = date(t.Y, t.M, t.D)
+                name = names[idx] if 0 <= idx < len(names) else "节气"
+                _add_all_day_event(cal, dt, name, "二十四节气", "节气")
+            day = day.after(1)
 
 
 def get_nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
@@ -271,6 +328,9 @@ def build_calendar() -> Calendar:
 
     # 浮动节日（母亲/父亲/感恩节等）
     generate_floating_holidays(cal, years)
+
+    # 二十四节气（来源：天文历法计算）
+    generate_solar_terms(cal, years)
 
     return cal
 

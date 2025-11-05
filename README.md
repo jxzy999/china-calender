@@ -5,6 +5,7 @@
 - 中国法定节假日（含国务院最新调休安排）
 - 传统节日（腊八/小年/中元节/元宵/重阳/七夕等）
 - 国际节日（情人节/圣诞节/母亲节/父亲节/感恩节等）
+- 二十四节气（小寒/大寒/立春/雨水/惊蛰/春分/清明/谷雨/立夏/小满/芒种/夏至/小暑/大暑/立秋/处暑/白露/秋分/寒露/霜降/立冬/小雪/大雪/冬至）
 
 数据每 7 天自动刷新（GitHub Actions），用户无需手动更新。
 
@@ -46,6 +47,8 @@ your-repo/
   - 由 `fixed_holidays.csv` 提供（如情人节/圣诞节/教师节/万圣节等）。
 - 浮动节日：
   - 脚本中动态计算（母亲节/父亲节/感恩节等）。
+- 二十四节气：
+  - 使用 `sxtwl` 进行天文历法计算，精确获取节气发生时间并转换为本地日期（全天事件）。
 
 ## 🛠 使用（本地生成）
 
@@ -69,3 +72,4 @@ your-repo/
 - 法定节假日: [NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn)
 - 农历计算: [lunardate](https://pypi.org/project/lunardate/)
 - ICS 生成: [icalendar](https://pypi.org/project/icalendar/)
+- 节气计算: [sxtwl](https://pypi.org/project/sxtwl/)
