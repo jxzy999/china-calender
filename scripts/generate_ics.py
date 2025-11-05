@@ -18,7 +18,7 @@ import requests
 from datetime import datetime, date, timedelta
 from typing import List, Dict, Tuple, Optional
 
-import pytz
+from zoneinfo import ZoneInfo
 from icalendar import Calendar, Event
 import lunardate
 try:
@@ -27,7 +27,7 @@ except Exception:
     sxtwl = None
 
 
-TZ_SH = pytz.timezone("Asia/Shanghai")
+TZ_SH = ZoneInfo("Asia/Shanghai")
 
 
 def _new_calendar() -> Calendar:
@@ -166,20 +166,22 @@ def lunar_to_solar_for_gregorian_year(gregorian_year: int, lunar_month: int, lun
     """计算指定公历年份内对应农历月日可能出现的公历日期（考虑跨年）。
 
     中文函数级注释：
+    - 使用 lunardate 提供的 `toSolarDate()` 方法将农历日期转换为公历日期。
     - 某些农历月份（如腊月）可能对应次年一月的公历日期；因此需要检查 (gregorian_year-1) 与 gregorian_year 两个农历年的映射。
     - 返回列表（通常 0~2 个日期），仅包含落在目标公历年的日期。
     """
     results: List[date] = []
     # 候选一：农历年=公历年
     try:
-        dt1 = lunardate.LunarDate(gregorian_year, lunar_month, lunar_day).to_datetime().date()
+        dt1 = lunardate.LunarDate(gregorian_year, lunar_month, lunar_day).toSolarDate()
         if dt1.year == gregorian_year:
             results.append(dt1)
     except Exception:
+        # 若该组合无效（如闰月或超出范围），忽略即可
         pass
     # 候选二：农历年=公历年-1（处理腊月等跨年情况）
     try:
-        dt0 = lunardate.LunarDate(gregorian_year - 1, lunar_month, lunar_day).to_datetime().date()
+        dt0 = lunardate.LunarDate(gregorian_year - 1, lunar_month, lunar_day).toSolarDate()
         if dt0.year == gregorian_year:
             results.append(dt0)
     except Exception:
@@ -215,14 +217,15 @@ def _solar_term_names() -> List[str]:
     """返回标准的二十四节气名列表（按序）。
 
     中文函数级注释：
-    - 顺序为：小寒、大寒、立春、雨水、惊蛰、春分、清明、谷雨、立夏、小满、芒种、夏至、
-      小暑、大暑、立秋、处暑、白露、秋分、寒露、霜降、立冬、小雪、大雪、冬至。
-    - 该顺序与常见历法库索引一致，便于映射。
+    - 顺序采用 sxtwl 示例中的 jqmc 顺序（以“冬至”为索引 0）：
+      冬至、小寒、大寒、立春、雨水、惊蛰、春分、清明、谷雨、立夏、小满、芒种、
+      夏至、小暑、大暑、立秋、处暑、白露、秋分、寒露、霜降、立冬、小雪、大雪。
+    - 与 sxtwl 的 getJieQi() 返回索引一致，避免名称错位。
     """
     return [
-        "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨",
-        "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑",
-        "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪", "冬至",
+        "冬至", "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨",
+        "立夏", "小满", "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露",
+        "秋分", "寒露", "霜降", "立冬", "小雪", "大雪",
     ]
 
 
