@@ -1,6 +1,7 @@
 # 📅 中国节假日 & 传统节日日历订阅（iPhone 兼容）
 
 本项目提供包含以下内容的 ICS 订阅：
+
 - 中国法定节假日（含国务院最新调休安排）
 - 传统节日（腊八/小年/中元节/元宵/重阳/七夕等）
 - 国际节日（情人节/圣诞节/母亲节/父亲节/感恩节等）
@@ -48,7 +49,7 @@ your-repo/
 
 ## 🛠 使用（本地生成）
 
-不运行 iOS 代码，仅生成 ICS 文件：
+运行代码，生成 ICS 文件：
 
 1. 安装依赖：
    `pip install -r requirements.txt`
@@ -63,15 +64,8 @@ your-repo/
 - 如需新增节日，请在 `data/fixed_holidays.csv` 或 `data/lunar_holidays.csv` 增加条目，并提交 PR。
 - 法定节假日数据以 `holiday-cn` 为准，脚本会自动合并与去重。
 
-## ⚠️ 注意
-
-- iPhone 导入使用 Raw 链接；若你的仓库默认分支不是 `main`，请替换为正确分支名。
-- GitHub 的 `cron: '0 0 */7 * *'` 为“每 7 天”规则，可能受月份天数影响并非精确 168 小时间隔，但能满足每周更新的需求。
-
 ## 📚 依赖
 
 - 法定节假日: [NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn)
 - 农历计算: [lunardate](https://pypi.org/project/lunardate/)
 - ICS 生成: [icalendar](https://pypi.org/project/icalendar/)
-
-
