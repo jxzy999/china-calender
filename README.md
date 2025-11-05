@@ -27,7 +27,7 @@ your-repo/
 ## 📱 iPhone 导入步骤
 
 1. 复制订阅链接（Raw 文件 URL）：
-   `https://raw.githubusercontent.com/<yourname>/<repo>/main/holidays.ics`
+   `https://raw.githubusercontent.com/jxzy999/china-calender/main/holidays.ics`
 2. 打开 iPhone「设置」→「日历」→「账户」→「添加账户」→「其他」
 3. 选择「添加已订阅的日历」
 4. 粘贴链接 → 点击「下一步」→ 完成
