@@ -1,5 +1,8 @@
 name: Update ICS
 
+permissions:
+  contents: write
+
 on:
   schedule:
     # 每 7 天在 UTC 0 点尝试更新一次（以天为步长）。
@@ -14,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -34,3 +39,4 @@ jobs:
           author_email: actions@github.com
           message: 'chore: auto update holidays.ics'
           push: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
