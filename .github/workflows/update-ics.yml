@@ -1,0 +1,36 @@
+name: Update ICS
+
+on:
+  schedule:
+    # 每 7 天在 UTC 0 点尝试更新一次（以天为步长）。
+    - cron: '0 0 */7 * *'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Generate ICS
+        run: python scripts/generate_ics.py
+
+      - name: Commit and push
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'holidays.ics'
+          author_name: github-actions
+          author_email: actions@github.com
+          message: 'chore: auto update holidays.ics'
+          push: true

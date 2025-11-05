@@ -1,0 +1,6 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//China Holiday Calendar//github.com//china-calendar//
+X-WR-CALNAME:中国节假日与常用节日
+X-WR-TIMEZONE:Asia/Shanghai
+END:VCALENDAR
